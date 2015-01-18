@@ -1,2 +1,3 @@
-# sky-events
-if completed, this web app should be able to notify users when certain sky events (meteor showers, eclipses, etc.) occur via email and text.
+# TODO: Gamified Task Manager
+
+A light web app which creates to-do lists with or without creating an account. This app will also support wearable tech support using the Strap Kit.
