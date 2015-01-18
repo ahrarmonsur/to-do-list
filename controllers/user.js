@@ -5,6 +5,7 @@ var nodemailer = require('nodemailer');
 var passport = require('passport');
 var User = require('../models/User');
 var secrets = require('../config/secrets');
+var nev = require('email-verification');
 
 /**
  * GET /login
@@ -71,12 +72,14 @@ exports.getSignup = function(req, res) {
  * Create a new local account.
  */
 exports.postSignup = function(req, res, next) {
+  // uses express-validator middleware
   req.assert('email', 'Email is not valid').isEmail();
   req.assert('password', 'Password must be at least 4 characters long').len(4);
   req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
 
   var errors = req.validationErrors();
 
+  // if email or password isn't legit...
   if (errors) {
     req.flash('errors', errors);
     return res.redirect('/signup');
@@ -87,6 +90,21 @@ exports.postSignup = function(req, res, next) {
     password: req.body.password
   });
 
+  nev.createTempUser(user, function(newTempUser) {
+    // new user created
+    if (newTempUser) {
+      nev.registerTempUser(newTempUser);
+      req.flash('success', {msg: 'An email has been sent to you. Please check it to verify your account.'});
+      res.redirect('/login');
+
+    // user already exists in temporary collection!
+    } else {
+      res.json({msg: 'You have already signed up. Please check your email to verify your account.'});
+    }
+  });
+
+
+  /*
   User.findOne({ email: req.body.email }, function(err, existingUser) {
     if (existingUser) {
       req.flash('errors', { msg: 'Account with that email address already exists.' });
@@ -100,6 +118,7 @@ exports.postSignup = function(req, res, next) {
       });
     });
   });
+  */
 };
 
 /**
